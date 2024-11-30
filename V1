@@ -1,0 +1,218 @@
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local ImageLabel = Instance.new("ImageLabel")
+local ToggleButton = Instance.new("TextButton")
+local ESPButton = Instance.new("TextButton")
+local ESPIndicator = Instance.new("Frame")
+local ESPLabel = Instance.new("TextLabel")
+local UICorner = Instance.new("UICorner")
+local ColorButtonsFrame = Instance.new("Frame")
+local TextLabel = Instance.new("TextLabel")
+
+ScreenGui.Name = "CustomScreenGui"
+ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+Frame.Name = "CustomFrame"
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.new(0, 0, 0)
+Frame.BackgroundTransparency = 0.2
+Frame.Size = UDim2.new(0.2, 0, 0.2, 0) 
+Frame.Position = UDim2.new(0.4, 0, 0.4, 0)
+
+UICorner.CornerRadius = UDim.new(0.1, 0)
+UICorner.Parent = Frame
+
+ImageLabel.Name = "LogoImage"
+ImageLabel.Parent = Frame
+ImageLabel.BackgroundTransparency = 1
+ImageLabel.Size = UDim2.new(0.1, 0, 0.1, 0)
+ImageLabel.Position = UDim2.new(0.75, 0, 0, 0)
+ImageLabel.Image = "rbxassetid://5143056985"
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = Frame
+ToggleButton.BackgroundColor3 = Color3.new(0, 0, 0)
+ToggleButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+ToggleButton.Position = UDim2.new(0.85, 0, 0, 0)
+ToggleButton.Text = "≡"
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.TextScaled = true
+
+ESPButton.Name = "ESPButton"
+ESPButton.Parent = Frame
+ESPButton.BackgroundTransparency = 1
+ESPButton.Size = UDim2.new(0.4, 0, 0.2, 0)
+ESPButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+ESPButton.Text = ""
+ESPButton.TextScaled = true
+
+ESPIndicator.Name = "ESPIndicator"
+ESPIndicator.Parent = ESPButton
+ESPIndicator.BackgroundColor3 = Color3.new(1, 0, 0)
+ESPIndicator.Size = UDim2.new(0.4, 0, 0.4, 0)
+ESPIndicator.Position = UDim2.new(0.05, 0, 0.3, 0)
+
+local espUICorner = Instance.new("UICorner", ESPIndicator)
+espUICorner.CornerRadius = UDim.new(1, 0)
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = ESPIndicator
+UIStroke.Color = Color3.new(1, 1, 1)
+UIStroke.Thickness = 2
+
+ESPLabel.Name = "ESPLabel"
+ESPLabel.Parent = ESPIndicator
+ESPLabel.BackgroundTransparency = 1
+ESPLabel.Size = UDim2.new(1, 0, 1, 0)
+ESPLabel.Text = "ESP"
+ESPLabel.TextColor3 = Color3.new(1, 1, 1)
+ESPLabel.TextScaled = true
+
+ColorButtonsFrame.Name = "ColorButtonsFrame"
+ColorButtonsFrame.Parent = Frame
+ColorButtonsFrame.BackgroundTransparency = 1
+ColorButtonsFrame.Size = UDim2.new(1, 0, 0.25, 0)  -- Shorter height
+ColorButtonsFrame.Position = UDim2.new(0, 0, 0.3, 0)
+
+local colors = {
+    {Color = Color3.new(1, 0, 0), Name = "Red"}, 
+    {Color = Color3.new(0, 1, 0), Name = "Green"},
+    {Color = Color3.new(0, 0, 1), Name = "Blue"},
+    {Color = Color3.new(1, 1, 0), Name = "Yellow"},
+    {Color = Color3.new(1, 0, 1), Name = "Magenta"},
+    {Color = Color3.new(0, 1, 1), Name = "Cyan"}
+}
+
+local currentESPColor = ESPIndicator.BackgroundColor3
+local espFrames = {}
+local espEnabled = false
+local selectedOutline -- Track the selected outline
+
+for i, color in ipairs(colors) do
+    local colorButton = Instance.new("TextButton")
+    colorButton.Name = color.Name .. "Button"
+    colorButton.Parent = ColorButtonsFrame
+    colorButton.BackgroundColor3 = color.Color
+    colorButton.Size = UDim2.new(0.15, 0, 1, 0)
+    colorButton.Position = UDim2.new((i - 1) * 0.16, 0, 0, 0) 
+    colorButton.Text = ""
+
+    local colorButtonOutline = Instance.new("UIStroke", colorButton)
+    colorButtonOutline.Thickness = 0
+
+    colorButton.MouseButton1Click:Connect(function()
+        currentESPColor = color.Color
+
+        if selectedOutline then
+            selectedOutline.Thickness = 0
+        end
+
+        colorButtonOutline.Thickness = 2
+        colorButtonOutline.Color = Color3.new(1, 1, 1)
+        selectedOutline = colorButtonOutline
+
+        for _, billboardGui in ipairs(espFrames) do
+            local frame = billboardGui:FindFirstChildOfClass("Frame")
+            if frame then
+                frame.BackgroundColor3 = currentESPColor
+            end
+        end
+    end)
+end
+
+TextLabel.Name = "ScriptLabel"
+TextLabel.Parent = Frame
+TextLabel.BackgroundTransparency = 0.5
+TextLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+TextLabel.Size = UDim2.new(1, 0, 0.1, 0)
+TextLabel.Position = UDim2.new(0, 0, 0.9, 0)
+TextLabel.Text = "Surf X Universal ESP Script"
+TextLabel.TextColor3 = Color3.new(1, 1, 1)
+TextLabel.TextScaled = true
+
+local function createFrameForPlayer(player)
+    if player == Players.LocalPlayer then return end -- Skip local player
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local billboardGui = Instance.new("BillboardGui")
+        billboardGui.Size = UDim2.new(2, 0, 5, 0)
+        billboardGui.AlwaysOnTop = true
+        billboardGui.Adornee = character.HumanoidRootPart
+
+        local frame = Instance.new("Frame", billboardGui)
+        frame.Size = UDim2.new(1, 0, 1, 0)
+        frame.BackgroundColor3 = currentESPColor
+        frame.BackgroundTransparency = 0.6
+
+        local uiCorner = Instance.new("UICorner", frame)
+        uiCorner.CornerRadius = UDim.new(0.1, 0)
+
+        billboardGui.Parent = character
+        table.insert(espFrames, billboardGui)
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    local newHeight
+    if Frame.Size == UDim2.new(0.2, 0, 0.2, 0) then
+        newHeight = UDim2.new(0.2, 0, 0.05, 0)
+    else
+        newHeight = UDim2.new(0.2, 0, 0.2, 0) 
+    end
+    local tweenHeight = TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = newHeight})
+    tweenHeight:Play()
+end)
+
+local function animateESPButton(isEnabled)
+    local targetPosition = isEnabled and UDim2.new(0.55, 0, 0.1, 0) or UDim2.new(0.1, 0, 0.1, 0)
+    local targetColor = isEnabled and Color3.new(0, 1, 0) or Color3.new(1, 0, 0) 
+
+    local tweenPosition = TweenService:Create(ESPIndicator, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = targetPosition, BackgroundColor3 = targetColor})
+    tweenPosition:Play()
+end
+
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            createFrameForPlayer(player)
+        end
+    else
+        for _, billboardGui in ipairs(espFrames) do
+            billboardGui:Destroy()
+        end
+        espFrames = {}
+    end
+
+    animateESPButton(espEnabled)
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if espEnabled then
+            createFrameForPlayer(player)
+        end
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    for i, billboardGui in ipairs(espFrames) do
+        if billboardGui.Adornee and billboardGui.Adornee:IsDescendantOf(player.Character) then
+            table.remove(espFrames, i)
+            billboardGui:Destroy()
+            break
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if espEnabled then
+            createFrameForPlayer(player)
+        end
+    end)
+end)
+
